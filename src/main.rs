@@ -65,7 +65,7 @@ fn handle_connection(mut stream: TcpStream, html_folder: &str){
         filename = format!("{}index.html", html_folder);
     }else{
         filename = path.replacen("/", "", 1);
-        filename = format!("{}{}.html", html_folder, filename);
+        filename = format!("{}/{}.html", html_folder, filename);
     }
 
     let contents = match fs::read_to_string(filename) {
