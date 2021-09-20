@@ -59,14 +59,15 @@ fn handle_connection(mut stream: TcpStream, html_folder: &str){
         info!("{} {} HTTP/1.1 {}",method, path, "405");
     }
 
-    let mut filename: String;
-
-    if path == "/" {
-        filename = format!("{}index.html", html_folder);
-    }else{
-        filename = path.replacen("/", "", 1);
-        filename = format!("{}/{}.html", html_folder, filename);
-    }
+    
+    let filename = match path {
+        "/" => format!("{}index.html", html_folder),
+        _ => {
+            let filename = path.replacen("/", "", 1);
+            format!("{}/{}.html", html_folder, filename)
+        }
+    };
+    
 
     let contents = match fs::read_to_string(filename) {
         Ok(filename) => filename,
@@ -76,13 +77,12 @@ fn handle_connection(mut stream: TcpStream, html_folder: &str){
         },
     };
     
-    let status_line: String;
-    
-    if contents == "Not Found" {
-        status_line = "404 NOT FOUND".to_string() ;
-    }else{
-        status_line = "200 OK".to_string() ;
-    }
+
+    let status_line = match contents.as_str() {
+        "Not Found" => "404 NOT FOUND".to_string(),
+        _ => "200 OK".to_string(),
+    }; 
+
 
     let response = format!(
         "{} {}\r\nContent-Length: {}\r\n\r\n{}",
