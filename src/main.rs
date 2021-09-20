@@ -8,6 +8,23 @@ use clap::{App, Arg};
 #[macro_use]
 extern crate log;
 
+const PROTOCOL: &str = "HTTP1/1";
+
+struct HttpStatus {
+    code: u32,
+    msg: &'static str,
+}
+
+impl HttpStatus {
+    fn full_msg(&self) -> String  {
+        format!("{} {}", self.code, self.msg)
+    }
+}
+
+const HTTP_OK: HttpStatus = HttpStatus{ code: 200, msg: "OK"};
+const HTTP_NOT_FOUND: HttpStatus = HttpStatus{ code: 404, msg: "NOT FOUND"};
+const HTTP_NOT_ALLOWED: HttpStatus = HttpStatus{ code: 405, msg: "NOT ALLOWED"};
+
 fn main(){
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
@@ -48,15 +65,15 @@ fn handle_connection(mut stream: TcpStream, html_folder: &str){
     let first_line = request_data_lines[0];
     let start: Vec<&str> = first_line.split(" ").collect();
     
-    let protocol = "HTTP/1.1"; 
     let method = start[0];
     let path = start[1];
     
     if method != "GET" {
-        let response = format!("{} 405 Method Not Allowed\r\n\r\n", protocol);
+        let response = format!("{} {}\r\n\r\n", PROTOCOL, HTTP_NOT_ALLOWED.full_msg());
         stream.write(response.as_bytes()).unwrap();
         stream.flush().unwrap();
-        info!("{} {} HTTP/1.1 {}",method, path, "405");
+        info!("{} {} HTTP/1.1 {}",method, path, HTTP_NOT_ALLOWED.code);
+        return
     }
 
     
@@ -79,20 +96,20 @@ fn handle_connection(mut stream: TcpStream, html_folder: &str){
     
 
     let status_line = match contents.as_str() {
-        "Not Found" => "404 NOT FOUND".to_string(),
-        _ => "200 OK".to_string(),
+        "Not Found" => HTTP_NOT_FOUND.full_msg(),
+        _ => HTTP_OK.full_msg(),
     }; 
 
 
     let response = format!(
         "{} {}\r\nContent-Length: {}\r\n\r\n{}",
-        protocol,
+        PROTOCOL,
         status_line,
         contents.len(),
         contents
     );
     
-    info!("{} {} {} {}",method, path, protocol, status_line);
+    info!("{} {} {} {}",method, path, PROTOCOL, status_line);
     stream.write(response.as_bytes()).unwrap();
     stream.flush().unwrap();
 
