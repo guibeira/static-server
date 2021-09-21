@@ -8,22 +8,9 @@ use clap::{App, Arg};
 #[macro_use]
 extern crate log;
 
-const PROTOCOL: &str = "HTTP1/1";
+mod contants;
+use contants::{HTTP_NOT_ALLOWED, HTTP_NOT_FOUND, HTTP_OK, PROTOCOL};
 
-struct HttpStatus {
-    code: u32,
-    msg: &'static str,
-}
-
-impl HttpStatus {
-    fn full_msg(&self) -> String  {
-        format!("{} {}", self.code, self.msg)
-    }
-}
-
-const HTTP_OK: HttpStatus = HttpStatus{ code: 200, msg: "OK"};
-const HTTP_NOT_FOUND: HttpStatus = HttpStatus{ code: 404, msg: "NOT FOUND"};
-const HTTP_NOT_ALLOWED: HttpStatus = HttpStatus{ code: 405, msg: "NOT ALLOWED"};
 
 fn main(){
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
